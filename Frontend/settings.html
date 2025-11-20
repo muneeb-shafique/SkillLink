@@ -1,0 +1,506 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SkillLink - Settings & Privacy</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght=300;400;500;600;700&display=swap" rel="stylesheet">
+
+    <style>
+        /* --- CORE THEME VARIABLES --- */
+        :root {
+            --primary: #4f46e5;
+            --secondary: #ec4899;
+            --bg-dark: #0f172a;
+            --glass-bg: rgba(30, 41, 59, 0.7);
+            --glass-border: rgba(255, 255, 255, 0.08);
+            --text-main: #ffffff;
+            --text-muted: #94a3b8;
+            --card-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.5);
+        }
+
+        body {
+            font-family: 'Outfit', sans-serif;
+            background-color: var(--bg-dark);
+            color: var(--text-main);
+            overflow-x: hidden;
+            min-height: 100vh;
+        }
+
+        /* --- ANIMATED BACKGROUND --- */
+        .background-shapes {
+            position: fixed;
+            width: 100vw;
+            height: 100vh;
+            z-index: -1;
+            top: 0;
+            left: 0;
+            overflow: hidden;
+            pointer-events: none;
+        }
+
+        .shape {
+            position: absolute;
+            filter: blur(100px);
+            opacity: 0.4;
+            animation: float 20s infinite alternate;
+        }
+
+        .shape-1 { top: -10%; left: -10%; width: 50vw; height: 50vw; background: linear-gradient(to right, #4338ca, #ec4899); border-radius: 50%; }
+        .shape-2 { bottom: -10%; right: -10%; width: 40vw; height: 40vw; background: linear-gradient(to left, #06b6d4, #3b82f6); border-radius: 50%; animation-delay: -5s; }
+        
+        @keyframes float {
+            0% { transform: translate(0, 0) rotate(0deg); }
+            100% { transform: translate(30px, 30px) rotate(10deg); }
+        }
+
+        /* --- GLASS COMPONENTS --- */
+        .glass-panel {
+            background: var(--glass-bg);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid var(--glass-border);
+            box-shadow: var(--card-shadow);
+        }
+
+        /* --- NAVBAR --- */
+        nav {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            z-index: 50;
+            transition: 0.3s ease;
+        }
+
+        .search-input {
+            background: rgba(15, 23, 42, 0.5);
+            border: 1px solid var(--glass-border);
+            transition: all 0.3s ease;
+        }
+        .search-input:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 15px rgba(79, 70, 229, 0.2);
+        }
+
+        .nav-item {
+            position: relative;
+            transition: all 0.3s;
+        }
+        .nav-item::after {
+            content: '';
+            position: absolute;
+            bottom: -5px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 0;
+            height: 3px;
+            background: linear-gradient(90deg, var(--primary), var(--secondary));
+            border-radius: 3px;
+            transition: width 0.3s;
+        }
+        .nav-item:hover::after, .nav-item.active::after {
+            width: 100%;
+        }
+        .nav-item:hover i {
+            color: var(--secondary);
+            text-shadow: 0 0 10px rgba(236, 72, 153, 0.5);
+        }
+
+        /* --- SETTINGS SPECIFIC --- */
+        .settings-sidebar button {
+            transition: all 0.2s;
+        }
+        .settings-sidebar button:hover {
+            background-color: rgba(255, 255, 255, 0.05);
+        }
+        .settings-sidebar button.active {
+            background: linear-gradient(90deg, var(--primary) 5%, transparent 100%);
+            color: white;
+            border-left: 4px solid var(--secondary);
+            font-weight: 600;
+        }
+
+        /* Switch Toggle */
+        .toggle-switch {
+            width: 48px;
+            height: 26px;
+            background-color: #334155;
+            border-radius: 15px;
+            position: relative;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        .toggle-switch::after {
+            content: '';
+            position: absolute;
+            top: 2px;
+            left: 2px;
+            width: 22px;
+            height: 22px;
+            background-color: #cbd5e1;
+            border-radius: 50%;
+            transition: transform 0.3s, background-color 0.3s;
+        }
+        .toggle-switch.active {
+            background-color: var(--primary);
+        }
+        .toggle-switch.active::after {
+            transform: translateX(22px);
+            background-color: white;
+        }
+        
+        .save-button {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+            transition: all 0.3s ease;
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+        .save-button:hover {
+            box-shadow: 0 5px 20px rgba(79, 70, 229, 0.4);
+            transform: translateY(-2px);
+        }
+
+        /* --- MODALS & TOAST --- */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(5px);
+            z-index: 1000;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+        }
+        .modal-overlay.active {
+            opacity: 1;
+            pointer-events: all;
+        }
+
+        .modal-content {
+            transform: scale(0.9);
+            transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+        .modal-overlay.active .modal-content {
+            transform: scale(1);
+        }
+        
+        #toast {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%) translateY(100px);
+            background: rgba(15, 23, 42, 0.9);
+            border: 1px solid var(--glass-border);
+            color: white;
+            padding: 12px 24px;
+            border-radius: 50px;
+            z-index: 2000;
+            transition: transform 0.3s cubic-bezier(0.68, -0.55, 0.27, 1.55);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        #toast.show {
+            transform: translateX(-50%) translateY(0);
+        }
+
+    </style>
+</head>
+<body>
+
+    <!-- Dynamic Background -->
+    <div class="background-shapes">
+        <div class="shape shape-1"></div>
+        <div class="shape shape-2"></div>
+    </div>
+
+    <!-- Toast Notification -->
+    <div id="toast">
+        <i class="fa-solid fa-circle-check text-green-400"></i>
+        <span id="toast-message">Notification message</span>
+    </div>
+
+    <!-- Profile Modal (Popup) -->
+    <div class="modal-overlay" id="profileModalOverlay">
+        <div class="modal-content glass-panel w-[90%] max-w-md p-8 rounded-3xl text-center relative">
+            <button class="absolute top-4 right-4 text-gray-400 hover:text-white transition" onclick="toggleProfileModal()">
+                <i class="fa-solid fa-xmark text-xl"></i>
+            </button>
+            
+            <div class="w-24 h-24 rounded-full bg-gradient-to-r from-indigo-500 to-pink-500 p-[3px] mx-auto mb-4 shadow-2xl">
+                <img src="https://api.dicebear.com/9.x/avataaars/svg?seed=Felix" class="rounded-full bg-gray-900 w-full h-full object-cover">
+            </div>
+            
+            <h2 class="text-2xl font-bold text-white mb-1">Alex Morgan</h2>
+            <p class="text-gray-400 text-sm mb-6">@alex_design • Lead Developer</p>
+            
+            <div class="space-y-3">
+                <button class="w-full bg-indigo-600 py-3 rounded-xl font-bold text-white hover:bg-indigo-700 transition" onclick="showToast('Redirecting to profile edit...')">
+                    Edit Profile
+                </button>
+                <button class="w-full text-red-400 py-2 text-sm hover:text-red-300 transition mt-2" onclick="window.location.href='welcome.html'">
+                    Log Out
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Navigation Bar -->
+    <nav class="glass-panel h-16 flex items-center justify-between px-4 md:px-8 fixed w-full border-b-0 rounded-b-2xl md:rounded-none">
+        <!-- Logo -->
+        <div class="flex items-center gap-2 cursor-pointer" onclick="window.location.href='dashboard.html'">
+            <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-indigo-500 to-pink-500 flex items-center justify-center text-white font-bold text-lg">S</div>
+            <span class="text-2xl font-bold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-white to-gray-400">SkillLink</span>
+        </div>
+
+        <!-- Search -->
+        <div class="hidden md:block flex-1 max-w-md mx-8">
+            <div class="relative group">
+                <i class="fa-solid fa-search absolute left-3 top-3 text-gray-400 group-hover:text-white transition-colors"></i>
+                <input type="text" placeholder="Search SkillLink..." class="search-input w-full py-2.5 pl-10 pr-4 rounded-full text-sm text-white placeholder-gray-400 outline-none">
+            </div>
+        </div>
+
+        <!-- Menu Icons -->
+        <div class="flex items-center gap-6 text-xl text-gray-400">
+            <a href="dashboard.html" class="nav-item hover:text-white"><i class="fa-solid fa-house"></i></a>
+            <a href="friends.html" class="nav-item hover:text-white"><i class="fa-solid fa-user-group"></i></a>
+            <a href="notifications.html" class="nav-item hover:text-white relative">
+                <i class="fa-solid fa-bell"></i>
+                <span class="absolute -top-2 -right-2 w-4 h-4 bg-pink-500 rounded-full text-[10px] flex items-center justify-center text-white border border-gray-900">3</span>
+            </a>
+            <a href="#" onclick="showToast('Messages coming soon!')" class="nav-item hover:text-white"><i class="fa-solid fa-paper-plane"></i></a>
+            
+            <!-- Profile Dropdown Trigger -->
+            <div class="w-9 h-9 rounded-full bg-gradient-to-r from-purple-500 to-pink-500 p-[2px] cursor-pointer hover:scale-105 transition" onclick="toggleProfileModal()">
+                <img src="https://api.dicebear.com/9.x/avataaars/svg?seed=Felix" alt="User" class="w-full h-full rounded-full bg-gray-900">
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Settings Layout -->
+    <div class="container mx-auto pt-24 pb-10 px-4 grid grid-cols-1 lg:grid-cols-4 gap-6">
+
+        <!-- LEFT SIDEBAR: Settings Menu -->
+        <div class="lg:col-span-1">
+            <div class="glass-panel rounded-2xl p-4 settings-sidebar sticky top-24">
+                <h2 class="text-2xl font-bold mb-4 px-3">Settings</h2>
+                <button id="generalBtn" class="w-full text-left flex items-center gap-3 p-3 rounded-xl active" data-tab="general" onclick="changeTab(this)">
+                    <i class="fa-solid fa-user-gear w-6 text-center"></i> General
+                </button>
+                <button id="securityBtn" class="w-full text-left flex items-center gap-3 p-3 rounded-xl text-gray-400" data-tab="security" onclick="changeTab(this)">
+                    <i class="fa-solid fa-shield-halved w-6 text-center"></i> Security & Privacy
+                </button>
+                <button id="notificationsBtn" class="w-full text-left flex items-center gap-3 p-3 rounded-xl text-gray-400" data-tab="notifications" onclick="changeTab(this)">
+                    <i class="fa-solid fa-bell w-6 text-center"></i> Notifications
+                </button>
+                <button class="w-full text-left flex items-center gap-3 p-3 rounded-xl text-red-400 hover:bg-red-900/10 mt-4" onclick="showToast('Account Deletion initiated...')">
+                    <i class="fa-solid fa-trash-can w-6 text-center"></i> Delete Account
+                </button>
+            </div>
+        </div>
+
+        <!-- RIGHT CONTENT: Settings Panels -->
+        <div class="lg:col-span-3 flex flex-col gap-6">
+            
+            <!-- General Settings Panel -->
+            <div id="general" class="settings-panel glass-panel rounded-2xl p-6">
+                <h3 class="text-xl font-bold border-b border-white/10 pb-3 mb-6">General Account Information</h3>
+                
+                <form class="space-y-6">
+                    <div>
+                        <label for="fullName" class="block text-sm font-medium text-gray-400 mb-2">Full Name</label>
+                        <input type="text" id="fullName" value="Alex Morgan" class="w-full p-3 rounded-lg bg-gray-800/50 border border-gray-700 focus:border-primary outline-none text-white placeholder-gray-500 transition">
+                    </div>
+                    <div>
+                        <label for="username" class="block text-sm font-medium text-gray-400 mb-2">Username</label>
+                        <input type="text" id="username" value="alex_design" class="w-full p-3 rounded-lg bg-gray-800/50 border border-gray-700 focus:border-primary outline-none text-white placeholder-gray-500 transition">
+                    </div>
+                    <div>
+                        <label for="email" class="block text-sm font-medium text-gray-400 mb-2">Email Address</label>
+                        <input type="email" id="email" value="alex.morgan@example.com" disabled class="w-full p-3 rounded-lg bg-gray-700/50 border border-gray-700 text-gray-500 outline-none">
+                        <p class="text-xs text-red-400 mt-1">Contact support to change email address.</p>
+                    </div>
+                    <div>
+                        <label for="bio" class="block text-sm font-medium text-gray-400 mb-2">Bio / Professional Summary</label>
+                        <textarea id="bio" rows="3" class="w-full p-3 rounded-lg bg-gray-800/50 border border-gray-700 focus:border-primary outline-none text-white resize-none placeholder-gray-500 transition">Lead Developer focused on React and Tailwind CSS. Passionate about clean architecture and mentoring junior talent.</textarea>
+                    </div>
+
+                    <div class="pt-4 flex justify-end">
+                        <button type="button" class="save-button text-white font-semibold px-8 py-3 rounded-full transition" onclick="showToast('General settings saved successfully!')">
+                            Save Changes
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Security Panel (Hidden by default) -->
+            <div id="security" class="settings-panel hidden glass-panel rounded-2xl p-6">
+                <h3 class="text-xl font-bold border-b border-white/10 pb-3 mb-6">Security & Login</h3>
+                
+                <div class="space-y-6">
+                    <!-- Change Password -->
+                    <div class="bg-white/5 p-4 rounded-xl border border-gray-700">
+                        <h4 class="font-semibold text-lg mb-3">Change Password</h4>
+                        <form class="space-y-3">
+                            <input type="password" placeholder="Current Password" class="w-full p-3 rounded-lg bg-gray-800/50 border border-gray-700 focus:border-primary outline-none text-white">
+                            <input type="password" placeholder="New Password" class="w-full p-3 rounded-lg bg-gray-800/50 border border-gray-700 focus:border-primary outline-none text-white">
+                            <input type="password" placeholder="Confirm New Password" class="w-full p-3 rounded-lg bg-gray-800/50 border border-gray-700 focus:border-primary outline-none text-white">
+                            <button type="button" class="w-full bg-primary hover:bg-indigo-600 text-white font-semibold py-2 rounded-lg transition" onclick="showToast('Password successfully updated!')">
+                                Update Password
+                            </button>
+                        </form>
+                    </div>
+                    
+                    <!-- Two-Factor Authentication -->
+                    <div class="flex justify-between items-center p-4 bg-white/5 rounded-xl border border-gray-700">
+                        <div>
+                            <p class="font-semibold">Two-Factor Authentication (2FA)</p>
+                            <p class="text-sm text-gray-400">Add an extra layer of security to your account.</p>
+                        </div>
+                        <div id="2faToggle" class="toggle-switch active" onclick="toggleSwitch(this, '2FA Status: Enabled', '2FA Status: Disabled')"></div>
+                    </div>
+                    
+                    <!-- Session Management -->
+                    <div class="bg-white/5 p-4 rounded-xl border border-gray-700">
+                        <h4 class="font-semibold text-lg mb-3">Active Sessions</h4>
+                        <p class="text-sm text-gray-400 mb-4">You are currently logged in on 3 devices.</p>
+                        <button class="text-sm text-red-400 hover:text-red-300 font-medium transition" onclick="showToast('All other sessions logged out!')">
+                            Log out from all other devices
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Notifications Panel (Hidden by default) -->
+            <div id="notifications" class="settings-panel hidden glass-panel rounded-2xl p-6">
+                <h3 class="text-xl font-bold border-b border-white/10 pb-3 mb-6">Notification Preferences</h3>
+                
+                <div class="space-y-6">
+                    <!-- Email Notifications -->
+                    <div class="flex justify-between items-center">
+                        <div>
+                            <p class="font-semibold">Email Notifications</p>
+                            <p class="text-sm text-gray-400">Receive weekly summaries and important announcements.</p>
+                        </div>
+                        <div class="toggle-switch" onclick="toggleSwitch(this, 'Emails: Enabled', 'Emails: Disabled')"></div>
+                    </div>
+                    
+                    <!-- New Follower Notifications -->
+                    <div class="flex justify-between items-center">
+                        <div>
+                            <p class="font-semibold">New Connection Requests</p>
+                            <p class="text-sm text-gray-400">Get notified immediately when someone sends you a connection request.</p>
+                        </div>
+                        <div class="toggle-switch active" onclick="toggleSwitch(this, 'Connection Requests: Enabled', 'Connection Requests: Disabled')"></div>
+                    </div>
+
+                    <!-- Post Activity Notifications -->
+                    <div class="flex justify-between items-center">
+                        <div>
+                            <p class="font-semibold">Post Activity</p>
+                            <p class="text-sm text-gray-400">Alerts for likes, comments, and shares on your posts.</p>
+                        </div>
+                        <div class="toggle-switch active" onclick="toggleSwitch(this, 'Post Activity: Enabled', 'Post Activity: Disabled')"></div>
+                    </div>
+                    
+                    <div class="pt-4 flex justify-end">
+                        <button type="button" class="save-button text-white font-semibold px-8 py-3 rounded-full transition" onclick="showToast('Notification preferences saved!')">
+                            Save Preferences
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <script>
+        // --- UTILS: TOAST & MODALS ---
+        function showToast(message) {
+            const toast = document.getElementById('toast');
+            document.getElementById('toast-message').innerText = message;
+            toast.classList.add('show');
+            setTimeout(() => toast.classList.remove('show'), 3000);
+        }
+
+        function toggleProfileModal() {
+            document.getElementById('profileModalOverlay').classList.toggle('active');
+        }
+
+        document.getElementById('profileModalOverlay').addEventListener('click', function(e) {
+            if (e.target === this) this.classList.remove('active');
+        });
+
+        // --- SETTINGS FUNCTIONALITY ---
+
+        /**
+         * Changes the active settings tab.
+         * @param {HTMLElement} btn - The button element that was clicked.
+         */
+        function changeTab(btn) {
+            const tabName = btn.getAttribute('data-tab');
+
+            // Deactivate all buttons and hide all panels
+            document.querySelectorAll('.settings-sidebar button').forEach(b => {
+                b.classList.remove('active', 'text-white');
+                b.classList.add('text-gray-400');
+            });
+            document.querySelectorAll('.settings-panel').forEach(panel => {
+                panel.classList.add('hidden');
+            });
+
+            // Activate the clicked button
+            btn.classList.add('active', 'text-white');
+            btn.classList.remove('text-gray-400');
+
+            // Show the corresponding panel
+            document.getElementById(tabName).classList.remove('hidden');
+        }
+
+        /**
+         * Toggles the state of a custom switch element.
+         * @param {HTMLElement} element - The toggle-switch element.
+         * @param {string} messageOn - The message to show when activated.
+         * @param {string} messageOff - The message to show when deactivated.
+         */
+        function toggleSwitch(element, messageOn, messageOff) {
+            const isActive = element.classList.toggle('active');
+            if (isActive) {
+                showToast(messageOn);
+            } else {
+                showToast(messageOff);
+            }
+        }
+
+        // --- GLOBAL SETUP ---
+
+        // 1. Navbar Scroll Effect
+        window.addEventListener('scroll', () => {
+            const nav = document.querySelector('nav');
+            if (window.scrollY > 10) {
+                nav.classList.add('shadow-lg');
+                nav.style.background = 'rgba(15, 23, 42, 0.9)';
+            } else {
+                nav.classList.remove('shadow-lg');
+                nav.style.background = 'var(--glass-bg)';
+            }
+        });
+        
+        // 2. Initial tab load
+        document.addEventListener('DOMContentLoaded', () => {
+             // Ensure General tab is active on load
+             document.getElementById('generalBtn').click();
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,590 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SkillLink - Notifications</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+    <style>
+        /* --- CORE THEME VARIABLES --- */
+        :root {
+            --primary: #4f46e5;
+            --secondary: #ec4899;
+            --bg-dark: #0f172a;
+            --glass-bg: rgba(30, 41, 59, 0.7);
+            --glass-border: rgba(255, 255, 255, 0.08);
+            --text-main: #ffffff;
+            --text-muted: #94a3b8;
+            --card-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.5);
+        }
+
+        body {
+            font-family: 'Outfit', sans-serif;
+            background-color: var(--bg-dark);
+            color: var(--text-main);
+            overflow-x: hidden;
+            min-height: 100vh;
+        }
+
+        /* --- ANIMATED BACKGROUND --- */
+        .background-shapes {
+            position: fixed;
+            width: 100vw;
+            height: 100vh;
+            z-index: -1;
+            top: 0;
+            left: 0;
+            overflow: hidden;
+            pointer-events: none;
+        }
+
+        .shape {
+            position: absolute;
+            filter: blur(100px);
+            opacity: 0.4;
+            animation: float 20s infinite alternate;
+        }
+
+        .shape-1 { top: -10%; left: -10%; width: 50vw; height: 50vw; background: linear-gradient(to right, #4338ca, #ec4899); border-radius: 50%; }
+        .shape-2 { bottom: -10%; right: -10%; width: 40vw; height: 40vw; background: linear-gradient(to left, #06b6d4, #3b82f6); border-radius: 50%; animation-delay: -5s; }
+        
+        @keyframes float {
+            0% { transform: translate(0, 0) rotate(0deg); }
+            100% { transform: translate(30px, 30px) rotate(10deg); }
+        }
+
+        /* --- GLASS COMPONENTS --- */
+        .glass-panel {
+            background: var(--glass-bg);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid var(--glass-border);
+            box-shadow: var(--card-shadow);
+        }
+
+        /* --- NAVBAR --- */
+        nav {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            z-index: 50;
+            transition: 0.3s ease;
+        }
+
+        .search-input {
+            background: rgba(15, 23, 42, 0.5);
+            border: 1px solid var(--glass-border);
+            transition: all 0.3s ease;
+        }
+        .search-input:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 15px rgba(79, 70, 229, 0.2);
+        }
+
+        .nav-item {
+            position: relative;
+            transition: all 0.3s;
+        }
+        .nav-item::after {
+            content: '';
+            position: absolute;
+            bottom: -5px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 0;
+            height: 3px;
+            background: linear-gradient(90deg, var(--primary), var(--secondary));
+            border-radius: 3px;
+            transition: width 0.3s;
+        }
+        .nav-item:hover::after, .nav-item.active::after {
+            width: 100%;
+        }
+        .nav-item:hover i {
+            color: var(--secondary);
+            text-shadow: 0 0 10px rgba(236, 72, 153, 0.5);
+        }
+
+        /* --- SCROLLBAR --- */
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: var(--bg-dark); }
+        ::-webkit-scrollbar-thumb { background: #334155; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: var(--primary); }
+
+        /* --- NOTIFICATION SPECIFIC --- */
+        .notification-item {
+            transition: background 0.2s ease, opacity 0.3s ease, transform 0.3s ease;
+        }
+        .notification-item:hover {
+            background: rgba(255, 255, 255, 0.05);
+        }
+        .notification-item.unread {
+            background: rgba(79, 70, 229, 0.1);
+            border-left: 3px solid var(--primary);
+        }
+        .notification-item.read-state {
+             opacity: 0.7;
+             border-left: 3px solid transparent;
+             background: transparent;
+        }
+        
+        .icon-box {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+        }
+
+        /* --- TOAST & MODAL (Copied from Dashboard for consistency) --- */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(5px);
+            z-index: 1000;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+        }
+        .modal-overlay.active {
+            opacity: 1;
+            pointer-events: all;
+        }
+
+        .profile-modal {
+            transform: scale(0.9);
+            transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+        .modal-overlay.active .profile-modal {
+            transform: scale(1);
+        }
+
+        #toast {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%) translateY(100px);
+            background: rgba(15, 23, 42, 0.9);
+            border: 1px solid var(--glass-border);
+            color: white;
+            padding: 12px 24px;
+            border-radius: 50px;
+            z-index: 2000;
+            transition: transform 0.3s cubic-bezier(0.68, -0.55, 0.27, 1.55);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        #toast.show {
+            transform: translateX(-50%) translateY(0);
+        }
+
+        /* Utils */
+        .online-dot { height: 10px; width: 10px; background-color: #22c55e; border-radius: 50%; box-shadow: 0 0 10px #22c55e; display: inline-block; }
+        .filter-btn.active { border-bottom-color: var(--secondary); color: white; }
+        .filter-btn { border-bottom-color: transparent; }
+    </style>
+</head>
+<body>
+
+    <!-- Dynamic Background -->
+    <div class="background-shapes">
+        <div class="shape shape-1"></div>
+        <div class="shape shape-2"></div>
+    </div>
+
+    <!-- Toast Notification -->
+    <div id="toast">
+        <i class="fa-solid fa-circle-check text-green-400"></i>
+        <span id="toast-message">Action successful</span>
+    </div>
+
+    <!-- Profile Modal -->
+    <div class="modal-overlay" id="profileModalOverlay">
+        <div class="profile-modal glass-panel w-[90%] max-w-md p-8 rounded-3xl text-center relative">
+            <button class="absolute top-4 right-4 text-gray-400 hover:text-white transition" onclick="toggleProfileModal()">
+                <i class="fa-solid fa-xmark text-xl"></i>
+            </button>
+            <div class="w-24 h-24 rounded-full bg-gradient-to-r from-indigo-500 to-pink-500 p-[3px] mx-auto mb-4 shadow-2xl">
+                <img src="https://api.dicebear.com/9.x/avataaars/svg?seed=Felix" class="rounded-full bg-gray-900 w-full h-full object-cover">
+            </div>
+            <h2 class="text-2xl font-bold text-white mb-1">Alex Morgan</h2>
+            <p class="text-gray-400 text-sm mb-6">@alex_design • Lead Developer</p>
+            <div class="space-y-3">
+                <a href="settings.html"><button class="w-full btn-gradient bg-indigo-600 py-3 rounded-xl font-bold text-white" onclick="showToast('Edit Profile')">Edit Profile</button></a>
+                <button class="w-full text-red-400 py-2 text-sm hover:text-red-300 transition mt-2" onclick="window.location.href='welcome.html'">Log Out</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Navigation Bar -->
+    <nav class="glass-panel h-16 flex items-center justify-between px-4 md:px-8 fixed w-full border-b-0 rounded-b-2xl md:rounded-none">
+        <!-- Logo (UPDATED) -->
+        <div class="flex items-center gap-2 cursor-pointer" onclick="window.location.href='dashboard.html'">
+            <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-indigo-500 to-pink-500 flex items-center justify-center text-white font-bold text-lg">S</div>
+            <span class="text-2xl font-bold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-white to-gray-400">SkillLink</span>
+        </div>
+
+        <!-- Search -->
+        <div class="hidden md:block flex-1 max-w-md mx-8">
+            <div class="relative group">
+                <i class="fa-solid fa-search absolute left-3 top-3 text-gray-400 group-hover:text-white transition-colors"></i>
+                <input type="text" placeholder="Search SkillLink..." class="search-input w-full py-2.5 pl-10 pr-4 rounded-full text-sm text-white placeholder-gray-400 outline-none">
+            </div>
+        </div>
+
+        <!-- Menu Icons -->
+        <div class="flex items-center gap-6 text-xl text-gray-400">
+            <a href="dashboard.html" class="nav-item hover:text-white"><i class="fa-solid fa-house"></i></a>
+            <a href="friends.html" class="nav-item hover:text-white"><i class="fa-solid fa-user-group"></i></a>
+            <!-- Active Notification Icon -->
+            <a href="notifications.html" class="nav-item active text-white relative">
+                <i class="fa-solid fa-bell"></i>
+                <span id="nav-badge" class="absolute -top-2 -right-2 w-4 h-4 bg-pink-500 rounded-full text-[10px] flex items-center justify-center text-white border border-gray-900">3</span>
+            </a>
+            <a href="#" onclick="showToast('Messages coming soon')" class="nav-item hover:text-white"><i class="fa-solid fa-paper-plane"></i></a>
+            
+            <div class="w-9 h-9 rounded-full bg-gradient-to-r from-purple-500 to-pink-500 p-[2px] cursor-pointer hover:scale-105 transition" onclick="toggleProfileModal()">
+                <img src="https://api.dicebear.com/9.x/avataaars/svg?seed=Felix" alt="User" class="w-full h-full rounded-full bg-gray-900">
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Grid Layout -->
+    <div class="container mx-auto pt-24 pb-10 px-4 grid grid-cols-1 md:grid-cols-12 gap-6">
+
+        <!-- LEFT SIDEBAR -->
+        <div class="hidden md:block md:col-span-3 lg:col-span-3 sticky top-24 h-[calc(100vh-8rem)]">
+            <div class="glass-panel rounded-2xl p-6 flex flex-col gap-6">
+                <div class="flex items-center gap-4 mb-4 pb-4 border-b border-gray-700 cursor-pointer hover:bg-white/5 p-2 rounded-lg transition" onclick="toggleProfileModal()">
+                    <div class="w-12 h-12 rounded-full bg-gradient-to-r from-blue-400 to-purple-600 p-[2px]">
+                        <img src="https://api.dicebear.com/9.x/avataaars/svg?seed=Felix" class="rounded-full bg-gray-900 w-full h-full">
+                    </div>
+                    <div>
+                        <h3 class="font-bold text-white text-lg">Alex Morgan</h3>
+                        <p class="text-gray-400 text-xs">@alex_design</p>
+                    </div>
+                </div>
+
+                <ul class="space-y-2">
+                    <li><a href="dashboard.html" class="flex items-center gap-3 p-3 rounded-xl hover:bg-white/5 text-gray-300 hover:text-white transition"><i class="fa-solid fa-rss w-6 text-center text-indigo-400"></i> Feed</a></li>
+                    <li><a href="friends.html" class="flex items-center gap-3 p-3 rounded-xl hover:bg-white/5 text-gray-300 hover:text-white transition"><i class="fa-solid fa-users w-6 text-center text-pink-400"></i> Friends</a></li>
+                    <li><a href="notifications.html" class="flex items-center gap-3 p-3 rounded-xl bg-white/5 text-white transition"><i class="fa-solid fa-bell w-6 text-center text-white"></i> Notifications</a></li>
+                    <li><a href="#" onclick="showToast('Photos gallery opening...')" class="flex items-center gap-3 p-3 rounded-xl hover:bg-white/5 text-gray-300 hover:text-white transition"><i class="fa-solid fa-images w-6 text-center text-green-400"></i> Photos</a></li>
+                    <li><a href="settings.html" onclick="showToast('Settings opening...')" class="flex items-center gap-3 p-3 rounded-xl hover:bg-white/5 text-gray-300 hover:text-white transition"><i class="fa-solid fa-gear w-6 text-center text-gray-400"></i> Settings</a></li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- CENTER CONTENT -->
+        <div class="col-span-1 md:col-span-9 lg:col-span-6 flex flex-col gap-6">
+            
+            <div class="glass-panel rounded-2xl p-5 flex justify-between items-center">
+                <h2 class="text-xl font-bold text-white">Notifications</h2>
+                <div class="flex gap-3 text-sm">
+                    <a href="settings.html"><button class="text-gray-400 hover:text-white transition" onclick="showToast('Notification settings')">Settings</button></a>
+                    <button onclick="markAllRead()" class="text-primary hover:text-pink-500 transition font-semibold">Mark all as read</button>
+                </div>
+            </div>
+
+            <!-- Functional Filter Tabs -->
+            <div class="flex gap-4 border-b border-white/10 pb-2">
+                <button class="filter-btn active text-white font-medium border-b-2 pb-2 px-2 transition hover:text-white" onclick="filterNotifications('all', this)">All</button>
+                <button class="filter-btn text-gray-400 border-b-2 pb-2 px-2 transition hover:text-white" onclick="filterNotifications('mention', this)">Mentions</button>
+                <button class="filter-btn text-gray-400 border-b-2 pb-2 px-2 transition hover:text-white" onclick="filterNotifications('system', this)">System</button>
+            </div>
+
+            <div class="glass-panel rounded-2xl overflow-hidden flex flex-col" id="notificationsList">
+                
+                <!-- Item 1: Request (Unread) -->
+                <div class="notification-item unread p-4 border-b border-white/5 flex gap-4 cursor-pointer" data-category="request">
+                    <div class="relative">
+                        <img src="https://api.dicebear.com/9.x/avataaars/svg?seed=Liam" class="w-12 h-12 rounded-full bg-gray-800">
+                        <div class="absolute -bottom-1 -right-1 bg-blue-500 rounded-full p-1 border border-gray-900 w-6 h-6 flex items-center justify-center">
+                            <i class="fa-solid fa-user-plus text-[10px] text-white"></i>
+                        </div>
+                    </div>
+                    <div class="flex-1">
+                        <p class="text-sm text-gray-200"><span class="font-bold text-white">Liam Smith</span> sent you a friend request.</p>
+                        <span class="text-xs text-primary font-semibold">2 min ago</span>
+                        <div class="mt-3 flex gap-3 action-buttons">
+                            <button class="bg-primary hover:bg-indigo-600 text-white text-xs px-4 py-1.5 rounded-full transition shadow-lg" onclick="handleFriendRequest(this, 'accept')">Confirm</button>
+                            <button class="bg-white/10 hover:bg-white/20 text-white text-xs px-4 py-1.5 rounded-full transition" onclick="handleFriendRequest(this, 'delete')">Delete</button>
+                        </div>
+                    </div>
+                    <div class="w-2 h-2 bg-pink-500 rounded-full mt-2 status-dot"></div>
+                </div>
+
+                <!-- Item 2: Like (Unread) -->
+                <div class="notification-item unread p-4 border-b border-white/5 flex gap-4 cursor-pointer" data-category="like" onclick="markItemRead(this)">
+                    <div class="relative">
+                        <img src="https://api.dicebear.com/9.x/avataaars/svg?seed=Sophie" class="w-12 h-12 rounded-full bg-gray-800">
+                        <div class="absolute -bottom-1 -right-1 bg-pink-500 rounded-full p-1 border border-gray-900 w-6 h-6 flex items-center justify-center">
+                            <i class="fa-solid fa-heart text-[10px] text-white"></i>
+                        </div>
+                    </div>
+                    <div class="flex-1">
+                        <p class="text-sm text-gray-200"><span class="font-bold text-white">Sophie L.</span> and <span class="font-bold text-white">14 others</span> liked your post "UI Kit design update".</p>
+                        <span class="text-xs text-primary font-semibold">15 min ago</span>
+                    </div>
+                    <div class="w-2 h-2 bg-pink-500 rounded-full mt-2 status-dot"></div>
+                </div>
+
+                <!-- Item 3: Comment (Unread) -->
+                <div class="notification-item unread p-4 border-b border-white/5 flex gap-4 cursor-pointer" data-category="comment" onclick="markItemRead(this)">
+                    <div class="relative">
+                        <img src="https://api.dicebear.com/9.x/avataaars/svg?seed=David" class="w-12 h-12 rounded-full bg-gray-800">
+                        <div class="absolute -bottom-1 -right-1 bg-green-500 rounded-full p-1 border border-gray-900 w-6 h-6 flex items-center justify-center">
+                            <i class="fa-solid fa-comment text-[10px] text-white"></i>
+                        </div>
+                    </div>
+                    <div class="flex-1">
+                        <p class="text-sm text-gray-200"><span class="font-bold text-white">David K.</span> commented: "This looks absolutely stunning, Alex! 🔥"</p>
+                        <span class="text-xs text-primary font-semibold">1 hour ago</span>
+                    </div>
+                    <div class="w-2 h-2 bg-pink-500 rounded-full mt-2 status-dot"></div>
+                </div>
+
+                <!-- Item 4: System (Read) -->
+                <div class="notification-item p-4 border-b border-white/5 flex gap-4 cursor-pointer opacity-70 hover:opacity-100" data-category="system">
+                    <div class="icon-box bg-gradient-to-br from-orange-500 to-red-500 text-white shadow-lg">
+                        <i class="fa-solid fa-shield-halved"></i>
+                    </div>
+                    <div class="flex-1">
+                        <p class="text-sm text-gray-200"><span class="font-bold text-white">Security Alert</span>: New login detected from Chrome on Windows.</p>
+                        <span class="text-xs text-gray-500">Yesterday</span>
+                    </div>
+                </div>
+
+                <!-- Item 5: Mention (Read) -->
+                <div class="notification-item p-4 border-b border-white/5 flex gap-4 cursor-pointer opacity-70 hover:opacity-100" data-category="mention">
+                    <div class="relative">
+                        <img src="https://api.dicebear.com/9.x/avataaars/svg?seed=Emily" class="w-12 h-12 rounded-full bg-gray-800">
+                        <div class="absolute -bottom-1 -right-1 bg-purple-500 rounded-full p-1 border border-gray-900 w-6 h-6 flex items-center justify-center">
+                            <i class="fa-solid fa-at text-[10px] text-white"></i>
+                        </div>
+                    </div>
+                    <div class="flex-1">
+                        <p class="text-sm text-gray-200"><span class="font-bold text-white">Emily Rose</span> mentioned you in a comment.</p>
+                        <span class="text-xs text-gray-500">2 days ago</span>
+                    </div>
+                </div>
+            </div>
+            
+            <button class="w-full py-3 text-sm text-gray-400 hover:text-white transition font-medium" onclick="loadMore()">Load older notifications</button>
+
+        </div>
+
+        <!-- RIGHT SIDEBAR -->
+        <div class="hidden lg:block lg:col-span-3 sticky top-24 h-[calc(100vh-8rem)]">
+            <div class="glass-panel rounded-2xl p-5 mb-6">
+                <h3 class="font-bold text-white mb-4">Suggested for you</h3>
+                <div class="space-y-4">
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center gap-2">
+                            <img src="https://api.dicebear.com/9.x/avataaars/svg?seed=Jack" class="w-8 h-8 rounded-full bg-gray-800">
+                            <div>
+                                <p class="text-xs font-bold text-white">Jack D.</p>
+                                <p class="text-[10px] text-gray-400">8 mutuals</p>
+                            </div>
+                        </div>
+                        <button class="text-xs text-primary border border-primary/50 hover:bg-primary hover:text-white px-3 py-1 rounded-full transition" onclick="showToast('Followed Jack D.')">Follow</button>
+                    </div>
+                     <div class="flex items-center justify-between">
+                        <div class="flex items-center gap-2">
+                            <img src="https://api.dicebear.com/9.x/avataaars/svg?seed=Luna" class="w-8 h-8 rounded-full bg-gray-800">
+                            <div>
+                                <p class="text-xs font-bold text-white">Luna Love</p>
+                                <p class="text-[10px] text-gray-400">Designer</p>
+                            </div>
+                        </div>
+                        <button class="text-xs text-primary border border-primary/50 hover:bg-primary hover:text-white px-3 py-1 rounded-full transition" onclick="showToast('Followed Luna')">Follow</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="glass-panel rounded-2xl p-5">
+                <h3 class="font-bold text-white mb-4">Contacts</h3>
+                <div class="space-y-4">
+                    <div class="flex items-center justify-between cursor-pointer hover:bg-white/5 p-2 rounded-lg transition" onclick="showToast('Opening chat with John')">
+                        <div class="flex items-center gap-3">
+                            <div class="relative">
+                                <img src="https://api.dicebear.com/9.x/avataaars/svg?seed=John" class="w-9 h-9 rounded-full bg-gray-800">
+                                <span class="absolute bottom-0 right-0 online-dot border-2 border-gray-900"></span>
+                            </div>
+                            <p class="text-sm font-medium text-gray-200">John Doe</p>
+                        </div>
+                        <i class="fa-regular fa-comment-dots text-gray-500 hover:text-white"></i>
+                    </div>
+                    <div class="flex items-center justify-between cursor-pointer hover:bg-white/5 p-2 rounded-lg transition" onclick="showToast('Opening chat with Emily')">
+                        <div class="flex items-center gap-3">
+                            <div class="relative">
+                                <img src="https://api.dicebear.com/9.x/avataaars/svg?seed=Emily" class="w-9 h-9 rounded-full bg-gray-800">
+                                <span class="absolute bottom-0 right-0 online-dot border-2 border-gray-900"></span>
+                            </div>
+                            <p class="text-sm font-medium text-gray-200">Emily Rose</p>
+                        </div>
+                        <i class="fa-regular fa-comment-dots text-gray-500 hover:text-white"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- UTILS: TOAST & MODALS ---
+        function showToast(message) {
+            const toast = document.getElementById('toast');
+            document.getElementById('toast-message').innerText = message;
+            toast.classList.add('show');
+            setTimeout(() => toast.classList.remove('show'), 3000);
+        }
+
+        function toggleProfileModal() {
+            document.getElementById('profileModalOverlay').classList.toggle('active');
+        }
+
+        document.getElementById('profileModalOverlay').addEventListener('click', function(e) {
+            if (e.target === this) this.classList.remove('active');
+        });
+
+        // --- NOTIFICATION LOGIC ---
+        
+        // 1. Mark Single Item Read
+        function markItemRead(element) {
+            // Only mark if it's currently unread
+            if(element.classList.contains('unread')) {
+                element.classList.remove('unread');
+                element.classList.add('read-state');
+                
+                const dot = element.querySelector('.status-dot');
+                if(dot) dot.style.display = 'none';
+                
+                updateBadgeCount(-1);
+            }
+        }
+
+        // 2. Mark All Read
+        function markAllRead() {
+            const unreadItems = document.querySelectorAll('.notification-item.unread');
+            if(unreadItems.length === 0) {
+                showToast('All notifications are already read');
+                return;
+            }
+
+            unreadItems.forEach(item => {
+                item.classList.remove('unread');
+                item.classList.add('read-state');
+                const dot = item.querySelector('.status-dot');
+                if(dot) dot.style.display = 'none';
+            });
+            
+            document.getElementById('nav-badge').style.display = 'none';
+            showToast('Marked all as read');
+        }
+
+        function updateBadgeCount(change) {
+            const badge = document.getElementById('nav-badge');
+            let current = parseInt(badge.innerText);
+            let newVal = current + change;
+            
+            if(newVal <= 0) {
+                badge.style.display = 'none';
+            } else {
+                badge.innerText = newVal;
+            }
+        }
+
+        // 3. Handle Friend Requests (Confirm/Delete)
+        function handleFriendRequest(btn, action) {
+            event.stopPropagation(); // Prevent triggering item click
+            const notificationItem = btn.closest('.notification-item');
+            const buttonsContainer = notificationItem.querySelector('.action-buttons');
+            
+            if (action === 'accept') {
+                buttonsContainer.innerHTML = '<span class="text-green-400 text-xs font-bold">Request Accepted</span>';
+                showToast('Friend request accepted');
+            } else {
+                buttonsContainer.innerHTML = '<span class="text-gray-400 text-xs">Request Deleted</span>';
+                showToast('Request deleted');
+            }
+            markItemRead(notificationItem);
+        }
+
+        // 4. Filter Logic
+        function filterNotifications(category, btn) {
+            // Update Active Tab state
+            document.querySelectorAll('.filter-btn').forEach(b => {
+                b.classList.remove('active');
+                b.classList.remove('text-white');
+                b.classList.add('text-gray-400');
+            });
+            btn.classList.add('active');
+            btn.classList.add('text-white');
+            btn.classList.remove('text-gray-400');
+
+            const items = document.querySelectorAll('.notification-item');
+
+            items.forEach(item => {
+                if (category === 'all') {
+                    item.style.display = 'flex';
+                } else {
+                    const itemCat = item.getAttribute('data-category');
+                    // Simple matching logic
+                    if(itemCat === category) {
+                         item.style.display = 'flex';
+                    } else {
+                         item.style.display = 'none';
+                    }
+                }
+            });
+        }
+
+        // 5. Load More (Simulation)
+        function loadMore() {
+            const list = document.getElementById('notificationsList');
+            showToast('Loading more...');
+            
+            // Simulate delay
+            setTimeout(() => {
+                const newItem = `
+                <div class="notification-item p-4 border-b border-white/5 flex gap-4 cursor-pointer opacity-70 hover:opacity-100" data-category="system">
+                    <div class="icon-box bg-gray-700 text-white">
+                        <i class="fa-solid fa-wrench"></i>
+                    </div>
+                    <div class="flex-1">
+                        <p class="text-sm text-gray-200"><span class="font-bold text-white">System Update</span>: SkillLink v2.0 is live.</p>
+                        <span class="text-xs text-gray-500">Last Week</span>
+                    </div>
+                </div>`;
+                list.insertAdjacentHTML('beforeend', newItem);
+            }, 500);
+        }
+
+        // --- NAVBAR SCROLL EFFECT ---
+        window.addEventListener('scroll', () => {
+            const nav = document.querySelector('nav');
+            if (window.scrollY > 10) {
+                nav.classList.add('shadow-lg');
+                nav.style.background = 'rgba(15, 23, 42, 0.9)';
+            } else {
+                nav.classList.remove('shadow-lg');
+                nav.style.background = 'var(--glass-bg)';
+            }
+        });
+    </script>
+</body>
+</html>

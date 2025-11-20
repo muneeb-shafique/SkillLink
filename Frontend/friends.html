@@ -1,0 +1,556 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SkillLink - My Network</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+    <style>
+        /* --- CORE THEME VARIABLES --- */
+        :root {
+            --primary: #4f46e5;
+            --secondary: #ec4899;
+            --bg-dark: #0f172a;
+            --glass-bg: rgba(30, 41, 59, 0.7);
+            --glass-border: rgba(255, 255, 255, 0.08);
+            --text-main: #ffffff;
+            --text-muted: #94a3b8;
+            --card-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.5);
+        }
+
+        body {
+            font-family: 'Outfit', sans-serif;
+            background-color: var(--bg-dark);
+            color: var(--text-main);
+            overflow-x: hidden;
+            min-height: 100vh;
+        }
+
+        /* --- ANIMATED BACKGROUND --- */
+        .background-shapes {
+            position: fixed;
+            width: 100vw;
+            height: 100vh;
+            z-index: -1;
+            top: 0;
+            left: 0;
+            overflow: hidden;
+            pointer-events: none;
+        }
+
+        .shape {
+            position: absolute;
+            filter: blur(100px);
+            opacity: 0.4;
+            animation: float 20s infinite alternate;
+        }
+
+        .shape-1 { top: -10%; left: -10%; width: 50vw; height: 50vw; background: linear-gradient(to right, #4338ca, #ec4899); border-radius: 50%; }
+        .shape-2 { bottom: -10%; right: -10%; width: 40vw; height: 40vw; background: linear-gradient(to left, #06b6d4, #3b82f6); border-radius: 50%; animation-delay: -5s; }
+        
+        @keyframes float {
+            0% { transform: translate(0, 0) rotate(0deg); }
+            100% { transform: translate(30px, 30px) rotate(10deg); }
+        }
+
+        /* --- GLASS COMPONENTS --- */
+        .glass-panel {
+            background: var(--glass-bg);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid var(--glass-border);
+            box-shadow: var(--card-shadow);
+        }
+
+        /* --- NAVBAR --- */
+        nav {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            z-index: 50;
+            transition: 0.3s ease;
+        }
+
+        .search-input {
+            background: rgba(15, 23, 42, 0.5);
+            border: 1px solid var(--glass-border);
+            transition: all 0.3s ease;
+        }
+        .search-input:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 15px rgba(79, 70, 229, 0.2);
+        }
+
+        .nav-item {
+            position: relative;
+            transition: all 0.3s;
+        }
+        .nav-item::after {
+            content: '';
+            position: absolute;
+            bottom: -5px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 0;
+            height: 3px;
+            background: linear-gradient(90deg, var(--primary), var(--secondary));
+            border-radius: 3px;
+            transition: width 0.3s;
+        }
+        .nav-item:hover::after, .nav-item.active::after {
+            width: 100%;
+        }
+        .nav-item:hover i {
+            color: var(--secondary);
+            text-shadow: 0 0 10px rgba(236, 72, 153, 0.5);
+        }
+
+        /* --- SCROLLBAR --- */
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: var(--bg-dark); }
+        ::-webkit-scrollbar-thumb { background: #334155; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: var(--primary); }
+
+        /* --- MODALS & TOAST --- */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(5px);
+            z-index: 1000;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+        }
+        .modal-overlay.active {
+            opacity: 1;
+            pointer-events: all;
+        }
+
+        .profile-modal {
+            transform: scale(0.9);
+            transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+        .modal-overlay.active .profile-modal {
+            transform: scale(1);
+        }
+
+        #toast {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%) translateY(100px);
+            background: rgba(15, 23, 42, 0.9);
+            border: 1px solid var(--glass-border);
+            color: white;
+            padding: 12px 24px;
+            border-radius: 50px;
+            z-index: 2000;
+            transition: transform 0.3s cubic-bezier(0.68, -0.55, 0.27, 1.55);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        #toast.show {
+            transform: translateX(-50%) translateY(0);
+        }
+
+        /* --- FRIEND LIST SPECIFIC --- */
+        .user-card {
+            transition: all 0.2s ease;
+        }
+        .user-card:hover {
+            transform: translateY(-2px);
+            background: rgba(255, 255, 255, 0.05);
+            box-shadow: 0 5px 15px -5px rgba(0, 0, 0, 0.3);
+        }
+        
+        .btn-gradient {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+            transition: all 0.3s ease;
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .filter-tab.active {
+            border-bottom-color: var(--secondary);
+            color: white;
+        }
+
+        /* Utils */
+        .online-dot { 
+            height: 10px; width: 10px; 
+            background-color: #22c55e; 
+            border-radius: 50%; 
+            box-shadow: 0 0 10px #22c55e; 
+            display: inline-block; 
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Dynamic Background -->
+    <div class="background-shapes">
+        <div class="shape shape-1"></div>
+        <div class="shape shape-2"></div>
+    </div>
+
+    <!-- Toast Notification -->
+    <div id="toast">
+        <i class="fa-solid fa-circle-check text-green-400"></i>
+        <span id="toast-message">Notification message</span>
+    </div>
+
+    <!-- Profile Modal (Popup) -->
+    <div class="modal-overlay" id="profileModalOverlay">
+        <div class="profile-modal glass-panel w-[90%] max-w-md p-8 rounded-3xl text-center relative">
+            <button class="absolute top-4 right-4 text-gray-400 hover:text-white transition" onclick="toggleProfileModal()">
+                <i class="fa-solid fa-xmark text-xl"></i>
+            </button>
+            
+            <div class="w-24 h-24 rounded-full bg-gradient-to-r from-indigo-500 to-pink-500 p-[3px] mx-auto mb-4 shadow-2xl">
+                <img src="https://api.dicebear.com/9.x/avataaars/svg?seed=Felix" class="rounded-full bg-gray-900 w-full h-full object-cover">
+            </div>
+            
+            <h2 class="text-2xl font-bold text-white mb-1">Alex Morgan</h2>
+            <p class="text-gray-400 text-sm mb-6">@alex_design • Lead Developer</p>
+            
+            <div class="space-y-3">
+                <a href="settings.html"><button class="w-full btn-gradient py-3 rounded-xl font-bold text-white shadow-lg hover:scale-[1.02] transition" onclick="showToast('Redirecting to profile edit...')">
+                    Edit Profile
+                </button></a>
+                <button class="w-full text-red-400 py-2 text-sm hover:text-red-300 transition mt-2" onclick="window.location.href='welcome.html'">
+                    Log Out
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Navigation Bar -->
+    <nav class="glass-panel h-16 flex items-center justify-between px-4 md:px-8 fixed w-full border-b-0 rounded-b-2xl md:rounded-none">
+        <!-- Logo -->
+        <div class="flex items-center gap-2 cursor-pointer" onclick="window.location.href='dashboard.html'">
+            <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-indigo-500 to-pink-500 flex items-center justify-center text-white font-bold text-lg">S</div>
+            <span class="text-2xl font-bold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-white to-gray-400">SkillLink</span>
+        </div>
+
+        <!-- Search -->
+        <div class="hidden md:block flex-1 max-w-md mx-8">
+            <div class="relative group">
+                <i class="fa-solid fa-search absolute left-3 top-3 text-gray-400 group-hover:text-white transition-colors"></i>
+                <input type="text" id="searchInput" placeholder="Search friends or skills..." class="search-input w-full py-2.5 pl-10 pr-4 rounded-full text-sm text-white placeholder-gray-400 outline-none">
+            </div>
+        </div>
+
+        <!-- Menu Icons -->
+        <div class="flex items-center gap-6 text-xl text-gray-400">
+            <a href="dashboard.html" class="nav-item hover:text-white"><i class="fa-solid fa-house"></i></a>
+            <a href="friends.html" class="nav-item active text-white"><i class="fa-solid fa-user-group"></i></a>
+            <a href="notifications.html" class="nav-item hover:text-white relative">
+                <i class="fa-solid fa-bell"></i>
+                <span class="absolute -top-2 -right-2 w-4 h-4 bg-pink-500 rounded-full text-[10px] flex items-center justify-center text-white border border-gray-900">3</span>
+            </a>
+            <a href="#" onclick="showToast('Messages coming soon!')" class="nav-item hover:text-white"><i class="fa-solid fa-paper-plane"></i></a>
+            
+            <!-- Profile Dropdown Trigger -->
+            <div class="w-9 h-9 rounded-full bg-gradient-to-r from-purple-500 to-pink-500 p-[2px] cursor-pointer hover:scale-105 transition" onclick="toggleProfileModal()">
+                <img src="https://api.dicebear.com/9.x/avataaars/svg?seed=Felix" alt="User" class="w-full h-full rounded-full bg-gray-900">
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Grid Layout -->
+    <div class="container mx-auto pt-24 pb-10 px-4 grid grid-cols-1 md:grid-cols-12 gap-6">
+
+        <!-- LEFT SIDEBAR -->
+        <div class="hidden md:block md:col-span-3 lg:col-span-3 sticky top-24 h-[calc(100vh-8rem)]">
+            <div class="glass-panel rounded-2xl p-6 flex flex-col gap-6">
+                <div class="flex items-center gap-4 mb-4 pb-4 border-b border-gray-700 cursor-pointer hover:bg-white/5 p-2 rounded-lg transition" onclick="toggleProfileModal()">
+                    <div class="w-12 h-12 rounded-full bg-gradient-to-r from-blue-400 to-purple-600 p-[2px]">
+                        <img src="https://api.dicebear.com/9.x/avataaars/svg?seed=Felix" class="rounded-full bg-gray-900 w-full h-full">
+                    </div>
+                    <div>
+                        <h3 class="font-bold text-white text-lg">Alex Morgan</h3>
+                        <p class="text-gray-400 text-xs">@alex_design</p>
+                    </div>
+                </div>
+
+                <ul class="space-y-2">
+                    <li><a href="dashboard.html" class="flex items-center gap-3 p-3 rounded-xl hover:bg-white/5 text-gray-300 hover:text-white transition"><i class="fa-solid fa-rss w-6 text-center text-indigo-400"></i> Feed</a></li>
+                    <li><a href="friends.html" class="flex items-center gap-3 p-3 rounded-xl bg-white/5 text-white transition"><i class="fa-solid fa-users w-6 text-center text-white"></i> Friends</a></li>
+                    <li><a href="notifications.html" class="flex items-center gap-3 p-3 rounded-xl hover:bg-white/5 text-gray-300 hover:text-white transition"><i class="fa-solid fa-bell w-6 text-center text-orange-400"></i> Notifications</a></li>
+                    <li><a href="#" onclick="showToast('Photos gallery opening...')" class="flex items-center gap-3 p-3 rounded-xl hover:bg-white/5 text-gray-300 hover:text-white transition"><i class="fa-solid fa-images w-6 text-center text-green-400"></i> Photos</a></li>
+                    <li><a href="settings.html" onclick="showToast('Settings opening...')" class="flex items-center gap-3 p-3 rounded-xl hover:bg-white/5 text-gray-300 hover:text-white transition"><i class="fa-solid fa-gear w-6 text-center text-gray-400"></i> Settings</a></li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- CENTER CONTENT: FRIENDS LIST -->
+        <div class="col-span-1 md:col-span-9 lg:col-span-6 flex flex-col gap-6">
+            
+            <div class="glass-panel rounded-2xl p-5">
+                <h2 class="text-xl font-bold text-white mb-4">My Network</h2>
+                
+                <!-- Functional Filter Tabs -->
+                <div class="flex gap-6 border-b border-white/10 pb-2 mb-4">
+                    <button class="filter-tab active text-white font-medium border-b-2 border-secondary pb-2 px-1 transition hover:text-white" onclick="filterUsers('all', this)">All Connections</button>
+                    <button class="filter-tab text-gray-400 border-b-2 border-transparent pb-2 px-1 transition hover:text-white" onclick="filterUsers('online', this)">Online</button>
+                    <button class="filter-tab text-gray-400 border-b-2 border-transparent pb-2 px-1 transition hover:text-white" onclick="filterUsers('request', this)">Requests <span id="requestCount" class="text-pink-400 ml-1">(2)</span></button>
+                    <button class="filter-tab text-gray-400 border-b-2 border-transparent pb-2 px-1 transition hover:text-white" onclick="filterUsers('suggested', this)">Suggested</button>
+                </div>
+
+                <!-- Users List -->
+                <div id="usersList" class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+
+                    <!-- Request Item 1 (Initial Load) -->
+                    <div class="user-card glass-panel p-4 rounded-xl flex flex-col items-center text-center transition" data-category="request" data-name="Liam Smith">
+                        <img src="https://api.dicebear.com/9.x/avataaars/svg?seed=Liam" class="w-16 h-16 rounded-full mb-3 bg-gray-800">
+                        <h4 class="font-bold text-white text-lg">Liam Smith</h4>
+                        <p class="text-xs text-gray-400 mb-3">Software Engineer</p>
+                        <div class="flex gap-2 w-full request-actions">
+                            <button class="flex-1 bg-primary hover:bg-indigo-600 text-white text-xs px-3 py-2 rounded-full transition font-semibold" onclick="handleRequest(this, 'accept')">Accept</button>
+                            <button class="flex-1 bg-white/10 hover:bg-white/20 text-white text-xs px-3 py-2 rounded-full transition" onclick="handleRequest(this, 'ignore')">Ignore</button>
+                        </div>
+                    </div>
+
+                    <!-- Request Item 2 (Initial Load) -->
+                    <div class="user-card glass-panel p-4 rounded-xl flex flex-col items-center text-center transition" data-category="request" data-name="Chloe White">
+                        <img src="https://api.dicebear.com/9.x/avataaars/svg?seed=Chloe" class="w-16 h-16 rounded-full mb-3 bg-gray-800">
+                        <h4 class="font-bold text-white text-lg">Chloe White</h4>
+                        <p class="text-xs text-gray-400 mb-3">Data Scientist</p>
+                        <div class="flex gap-2 w-full request-actions">
+                            <button class="flex-1 bg-primary hover:bg-indigo-600 text-white text-xs px-3 py-2 rounded-full transition font-semibold" onclick="handleRequest(this, 'accept')">Accept</button>
+                            <button class="flex-1 bg-white/10 hover:bg-white/20 text-white text-xs px-3 py-2 rounded-full transition" onclick="handleRequest(this, 'ignore')">Ignore</button>
+                        </div>
+                    </div>
+                    
+                    <!-- Friend Item 1 (Online) -->
+                    <div class="user-card glass-panel p-4 rounded-xl flex flex-col items-center text-center transition" data-category="online friend" data-name="Sophie L.">
+                        <div class="relative">
+                            <img src="https://api.dicebear.com/9.x/avataaars/svg?seed=Sophie" class="w-16 h-16 rounded-full mb-3 bg-gray-800">
+                            <span class="absolute bottom-3 right-0 online-dot border-2 border-gray-900"></span>
+                        </div>
+                        <h4 class="font-bold text-white text-lg">Sophie L.</h4>
+                        <p class="text-xs text-gray-400 mb-3">Product Designer</p>
+                        <div class="flex gap-2 w-full">
+                            <button class="flex-1 bg-white/10 hover:bg-white/20 text-white text-sm px-3 py-2 rounded-full transition" onclick="showToast('Starting chat with Sophie...')"><i class="fa-regular fa-comment-dots"></i> Chat</button>
+                            <button class="text-red-400 hover:text-red-300 text-sm px-3 py-2 rounded-full transition" onclick="showToast('Removed Sophie')"><i class="fa-solid fa-user-xmark"></i></button>
+                        </div>
+                    </div>
+
+                    <!-- Friend Item 2 (Offline) -->
+                    <div class="user-card glass-panel p-4 rounded-xl flex flex-col items-center text-center transition" data-category="offline friend" data-name="David K.">
+                         <img src="https://api.dicebear.com/9.x/avataaars/svg?seed=David" class="w-16 h-16 rounded-full mb-3 bg-gray-800">
+                        <h4 class="font-bold text-white text-lg">David K.</h4>
+                        <p class="text-xs text-gray-400 mb-3">DevOps Specialist</p>
+                        <div class="flex gap-2 w-full">
+                            <button class="flex-1 bg-white/10 hover:bg-white/20 text-white text-sm px-3 py-2 rounded-full transition" onclick="showToast('Starting chat with David...')"><i class="fa-regular fa-comment-dots"></i> Chat</button>
+                            <button class="text-red-400 hover:text-red-300 text-sm px-3 py-2 rounded-full transition" onclick="showToast('Removed David')"><i class="fa-solid fa-user-xmark"></i></button>
+                        </div>
+                    </div>
+
+                    <!-- Suggested Item 1 -->
+                    <div class="user-card glass-panel p-4 rounded-xl flex flex-col items-center text-center transition" data-category="suggested" data-name="Jack D.">
+                         <img src="https://api.dicebear.com/9.x/avataaars/svg?seed=Jack" class="w-16 h-16 rounded-full mb-3 bg-gray-800">
+                        <h4 class="font-bold text-white text-lg">Jack D.</h4>
+                        <p class="text-xs text-gray-400 mb-3">Frontend Developer</p>
+                        <div class="flex gap-2 w-full">
+                            <button class="w-full bg-primary hover:bg-indigo-600 text-white text-sm px-3 py-2 rounded-full transition font-semibold" onclick="showToast('Connection request sent to Jack')">Connect</button>
+                        </div>
+                    </div>
+
+                    <!-- Suggested Item 2 -->
+                    <div class="user-card glass-panel p-4 rounded-xl flex flex-col items-center text-center transition" data-category="suggested" data-name="Sarah M.">
+                         <img src="https://api.dicebear.com/9.x/avataaars/svg?seed=Sarah" class="w-16 h-16 rounded-full mb-3 bg-gray-800">
+                        <h4 class="font-bold text-white text-lg">Sarah M.</h4>
+                        <p class="text-xs text-gray-400 mb-3">Marketing Manager</p>
+                        <div class="flex gap-2 w-full">
+                            <button class="w-full bg-primary hover:bg-indigo-600 text-white text-sm px-3 py-2 rounded-full transition font-semibold" onclick="showToast('Connection request sent to Sarah')">Connect</button>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+            
+            <button class="w-full py-3 text-sm text-gray-400 hover:text-white transition font-medium" onclick="showToast('Loading more connections...')">Load More Connections</button>
+
+        </div>
+
+        <!-- RIGHT SIDEBAR -->
+        <div class="hidden lg:block lg:col-span-3 sticky top-24 h-[calc(100vh-8rem)]">
+            <div class="glass-panel rounded-2xl p-5 mb-6">
+                <h3 class="font-bold text-white mb-4">Skill Match Index</h3>
+                <div class="space-y-4">
+                    <div class="bg-white/5 p-3 rounded-lg">
+                        <p class="text-sm font-semibold">Top Match: Python/AI</p>
+                        <div class="w-full bg-gray-700 rounded-full h-2.5 mt-1">
+                            <div class="bg-green-500 h-2.5 rounded-full" style="width: 85%"></div>
+                        </div>
+                        <p class="text-xs text-gray-400 mt-1">85% compatibility with network.</p>
+                    </div>
+                    <div class="bg-white/5 p-3 rounded-lg">
+                        <p class="text-sm font-semibold">Web Design</p>
+                        <div class="w-full bg-gray-700 rounded-full h-2.5 mt-1">
+                            <div class="bg-indigo-500 h-2.5 rounded-full" style="width: 60%"></div>
+                        </div>
+                        <p class="text-xs text-gray-400 mt-1">60% compatibility.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="glass-panel rounded-2xl p-5">
+                <h3 class="font-bold text-white mb-4">Groups You Might Like</h3>
+                <div class="space-y-4">
+                    <div class="flex items-center justify-between cursor-pointer hover:bg-white/5 p-2 rounded-lg transition" onclick="showToast('Joining Frontend Masters Group')">
+                        <div class="flex items-center gap-3">
+                            <div class="w-9 h-9 rounded-lg bg-pink-500 flex items-center justify-center text-white text-sm">F</div>
+                            <p class="text-sm font-medium text-gray-200">Frontend Masters</p>
+                        </div>
+                        <button class="text-xs text-primary border border-primary/50 hover:bg-primary hover:text-white px-3 py-1 rounded-full transition">Join</button>
+                    </div>
+                    <div class="flex items-center justify-between cursor-pointer hover:bg-white/5 p-2 rounded-lg transition" onclick="showToast('Joining Data Science Hub Group')">
+                        <div class="flex items-center gap-3">
+                            <div class="w-9 h-9 rounded-lg bg-blue-500 flex items-center justify-center text-white text-sm">D</div>
+                            <p class="text-sm font-medium text-gray-200">Data Science Hub</p>
+                        </div>
+                        <button class="text-xs text-primary border border-primary/50 hover:bg-primary hover:text-white px-3 py-1 rounded-full transition">Join</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- UTILS: TOAST & MODALS ---
+        function showToast(message) {
+            const toast = document.getElementById('toast');
+            document.getElementById('toast-message').innerText = message;
+            toast.classList.add('show');
+            setTimeout(() => toast.classList.remove('show'), 3000);
+        }
+
+        function toggleProfileModal() {
+            document.getElementById('profileModalOverlay').classList.toggle('active');
+        }
+
+        document.getElementById('profileModalOverlay').addEventListener('click', function(e) {
+            if (e.target === this) this.classList.remove('active');
+        });
+
+        // --- FRIEND LIST FUNCTIONALITY ---
+
+        // 1. Filter Users by Category (Tab Click)
+        function filterUsers(category, btn) {
+            // Update Active Tab state
+            document.querySelectorAll('.filter-tab').forEach(b => {
+                b.classList.remove('active', 'text-white', 'border-secondary');
+                b.classList.add('text-gray-400', 'border-transparent');
+            });
+            btn.classList.add('active', 'text-white', 'border-secondary');
+            btn.classList.remove('text-gray-400', 'border-transparent');
+
+            const users = document.querySelectorAll('.user-card');
+
+            users.forEach(user => {
+                const itemCat = user.getAttribute('data-category');
+                
+                if (category === 'all') {
+                    user.style.display = 'flex';
+                } else if (itemCat.includes(category)) {
+                    user.style.display = 'flex';
+                } else {
+                    user.style.display = 'none';
+                }
+            });
+        }
+
+        // 2. Handle Friend Requests (Accept/Ignore)
+        function handleRequest(btn, action) {
+            event.stopPropagation();
+            const card = btn.closest('.user-card');
+            const name = card.getAttribute('data-name');
+            const list = document.getElementById('usersList');
+            const requestCountSpan = document.getElementById('requestCount');
+            let currentCount = parseInt(requestCountSpan.innerText.replace('(', '').replace(')', ''));
+
+            if (action === 'accept') {
+                showToast(`Accepted connection request from ${name}.`);
+                // Change category to 'friend' and update UI for new friend
+                card.setAttribute('data-category', 'friend');
+                card.classList.add('new-friend-flash');
+                const actionsContainer = card.querySelector('.request-actions');
+                actionsContainer.innerHTML = `
+                    <button class="flex-1 bg-white/10 hover:bg-white/20 text-white text-sm px-3 py-2 rounded-full transition" onclick="showToast('Starting chat with ${name}...')"><i class="fa-regular fa-comment-dots"></i> Chat</button>
+                    <button class="text-red-400 hover:text-red-300 text-sm px-3 py-2 rounded-full transition" onclick="showToast('Removed ${name}')"><i class="fa-solid fa-user-xmark"></i></button>
+                `;
+            } else { // ignore
+                showToast(`Ignored request from ${name}.`);
+                // Visually remove the card
+                card.style.opacity = '0';
+                card.style.transform = 'scale(0.9)';
+                setTimeout(() => card.remove(), 300);
+            }
+            
+            // Update request count
+            if (currentCount > 0) {
+                 requestCountSpan.innerText = `(${currentCount - 1})`;
+            }
+            if(currentCount - 1 === 0) {
+                 requestCountSpan.style.color = 'var(--text-muted)';
+            }
+        }
+
+        // 3. Search Functionality
+        const searchInput = document.getElementById('searchInput');
+        searchInput.addEventListener('keyup', function() {
+            const filter = this.value.toLowerCase();
+            const users = document.querySelectorAll('.user-card');
+            
+            // Ensure we are filtering across all categories when searching
+            document.querySelectorAll('.filter-tab').forEach(b => {
+                b.classList.remove('active', 'text-white', 'border-secondary');
+                b.classList.add('text-gray-400', 'border-transparent');
+            });
+
+            users.forEach(user => {
+                const name = user.getAttribute('data-name').toLowerCase();
+                const category = user.getAttribute('data-category').toLowerCase();
+                
+                if (name.includes(filter) || category.includes(filter)) {
+                    user.style.display = 'flex';
+                } else {
+                    user.style.display = 'none';
+                }
+            });
+        });
+
+        // 4. Navbar Scroll Effect
+        window.addEventListener('scroll', () => {
+            const nav = document.querySelector('nav');
+            if (window.scrollY > 10) {
+                nav.classList.add('shadow-lg');
+                nav.style.background = 'rgba(15, 23, 42, 0.9)';
+            } else {
+                nav.classList.remove('shadow-lg');
+                nav.style.background = 'var(--glass-bg)';
+            }
+        });
+        
+        // Initial setup to run the filter on load to ensure requests tab shows the count.
+        document.addEventListener('DOMContentLoaded', () => {
+             // Start on 'All Connections' tab
+             filterUsers('all', document.querySelector('.filter-tab')); 
+        });
+    </script>
+</body>
+</html>
