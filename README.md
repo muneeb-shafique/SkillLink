@@ -32,9 +32,9 @@
   <h2>Project Brief</h2>
   <p><mark>SkillLink</mark> is a peer-to-peer web platform for exchanging skills without monetary transactions. Users post skills they can teach and skills they want to learn; the system suggests matches, supports scheduling, real-time chat, and reputation mechanics.</p>
 
-  <figure>
-    <svg role="img" viewBox="0 0 200 60" width="320" height="96" xmlns="http://www.w3.org/2000/svg" aria-labelledby="logoTitle logoDesc">
-      <title id="logoTitle">SkillLink logo</title>
+<figure>
+<svg role="img" viewBox="0 0 200 60" width="320" height="96" xmlns="http://www.w3.org/2000/svg" aria-labelledby="logoTitle logoDesc">
+<title>SkillLink</title>
       <desc id="logoDesc">abstract network icon with nodes and connecting lines</desc>
       <circle cx="20" cy="30" r="6" />
       <circle cx="80" cy="15" r="6" />
