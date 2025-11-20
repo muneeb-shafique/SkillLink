@@ -123,8 +123,8 @@
   <h2>Quick Start</h2>
 
   <h3>Clone & Setup</h3>
-  <pre><code>git clone https://github.com/your-org/skilllink.git
-cd skilllink</code></pre>
+  <pre><code>git clone https://github.com/muneeb-shafique/SkillLink/
+cd SkillLink</code></pre>
 
   <h3>Backend (example: Node.js)</h3>
   <pre><code>cd backend
