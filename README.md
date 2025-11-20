@@ -381,7 +381,7 @@ docs: update README</code></pre>
   <h2>Legal & License</h2>
   <p>Licensed under the MIT License. See <a href="LICENSE">LICENSE</a> for full text.</p>
   <address>
-    Maintained by SkillLink Team — Institute of Data Science, UET Lahore. Contact: <a href="mailto:muneeb@example.com">muneeb@example.com</a>
+    This project is made and maintained under Institute of Data Science, University of Engineering and Technology(UET) Lahore as a part of 3rd semester Software Engineering Project. <strong>Contact:</strong> <a href="mailto:muneebshafiq512@gmail.com">muneebshafiq512@gmail.com</a> or <strong>Visit:<strong> <a href="https://muneebshafique.xo.je/"> My Website</a> for any kind of query or collaboration.
   </address>
 </section>
 
